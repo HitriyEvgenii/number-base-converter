@@ -1,0 +1,117 @@
+package converter
+import java.math.BigDecimal
+import java.math.BigInteger
+import java.math.RoundingMode
+
+fun firstLevel() {
+    println("Enter two numbers in format: {source base} {target base} (To quit type /exit)")
+    var input = readln().split(" ")
+
+    if (input[0] == "/exit") toExit() else  secondLevel(input[0], input[1])
+
+    }
+
+fun secondLevel(base: String, target: String) {
+    println("Enter number in base ${base} to convert to base ${target} (To go back type /back)")
+    var number = readln()
+    while (number != "/back") {
+        if ('.' in number) {
+            val numberInt = number.split(".")[0].toString()
+            val numberFractional = number.split(".")[1].toString()
+            val numberIntToDecimal = toDecimal(numberInt, base)
+            val numberIntFromDecimal = fromDecimal(numberIntToDecimal, target.toInt())
+            val numberFractionalToDecimal = fractionalToDecimal(numberFractional, base)
+            val numberFractionalFromDecimal = fractionalFromDecimal(numberFractionalToDecimal, target.toInt())
+            println("Conversion result: " + numberIntFromDecimal + "." + numberFractionalFromDecimal)
+            println("Enter number in base ${base} to convert to base ${target} (To go back type /back)")
+
+            number = readln()
+        }
+        else {
+            val numberToDecimal = toDecimal(number, base)
+            val numberFromDecimal= fromDecimal(numberToDecimal, target.toInt())
+            println("Conversion result: " + numberFromDecimal)
+            println("Enter number in base ${base} to convert to base ${target} (To go back type /back)")
+
+            number = readln()
+        }
+
+    }
+    firstLevel()
+}
+
+
+fun fromDecimal(n: BigInteger, base: Int): String {
+    var quotient = n
+    var remainder = 0.toBigInteger()
+    var result = ""
+    val alph32 = "abcdefghijklmnopqrstuvwxyz"
+
+    do {
+        if (quotient % base.toBigInteger() >= 10.toBigInteger()) result += alph32[(quotient % base.toBigInteger()).toInt()-10]
+        else result += quotient % base.toBigInteger()
+        quotient /= base.toBigInteger()
+    }
+    while (quotient >= base.toBigInteger())
+    if (quotient % base.toBigInteger() >= 10.toBigInteger()) result += alph32[(quotient % base.toBigInteger()).toInt()-10]
+    else {
+        if (quotient != BigInteger.ZERO) result += quotient
+    }
+    return result.reversed()
+}
+
+fun toDecimal(number: String, sourceBase: String): BigInteger {
+    var result = 0.toBigInteger()
+    var pow8 = number.length - 1
+    var v = sourceBase.toBigInteger()
+    val alph32 = "abcdefghijklmnopqrstuvwxyz"
+    for (i in 0..number.length - 1) {
+        if (number[i] in alph32) result += (alph32.indexOf(number[i],0)+10).toBigInteger() * v.pow(pow8)
+
+        else result += number[i].toString().toInt().toBigInteger() * v.pow(pow8)
+        pow8--
+    }
+    return result
+
+}
+
+fun fractionalToDecimal(number: String, sourceBase: String): BigDecimal {
+    var result = BigDecimal.ZERO
+    val v = sourceBase.toBigDecimal()
+    val alph32 = "abcdefghijklmnopqrstuvwxyz"
+    for (i in 0..number.length - 1) {
+        if (number[i] in alph32) result += (alph32.indexOf(number[i],0)+10).toBigDecimal() * BigDecimal.ONE.divide(v.pow(i+1), 10, RoundingMode.CEILING)
+
+        else {
+            if (number[i] != '0') result += BigDecimal(number[i].toString()) * BigDecimal.ONE.divide(v.pow(i+1), 10, RoundingMode.CEILING)
+            else result += BigDecimal.ZERO
+        }
+
+    }
+    return result.setScale(5, RoundingMode.FLOOR)
+}
+
+fun fractionalFromDecimal(number: BigDecimal, base: Int): String {
+    var a = number * base.toBigDecimal()
+
+    var result = ""
+    val alph32 = "abcdefghijklmnopqrstuvwxyz"
+    repeat (5) {
+        if (a >= BigDecimal.ONE) {
+            if (a >= BigDecimal.TEN) result += alph32[a.toString().split(".")[0].toInt() - 10]
+            else result += a.toString().split(".")[0].toString()
+        }
+        else result += "0"
+        //println(a.toString().split(".")[1])
+        a = (a - a.setScale(0, RoundingMode.FLOOR)) * base.toBigDecimal()
+        //println(a)
+    }
+    return result
+}
+
+fun toExit() {
+    return
+}
+fun main() {
+    firstLevel()
+}
